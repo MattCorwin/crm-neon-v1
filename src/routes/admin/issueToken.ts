@@ -3,19 +3,17 @@ import { getSecret } from '../../common/utils/getSecret';
 import { timingSafeEqual } from 'crypto';
 import { ErrorResponse, BadRequestError, UnauthorizedError, InternalServerError } from '../../common/utils/errors';
 
-const [publicKeyPem, privateKeyPem, ssmApiKey] = await Promise.all([
+const [publicKeyPem, privateKeyPem] = await Promise.all([
   getSecret(process.env.JWT_PUBLIC_KEY_NAME || 'crm-jwt-public-key-dev'),
   getSecret(process.env.JWT_PRIVATE_KEY_NAME || 'crm-jwt-private-key-dev'),
-  getSecret(process.env.API_KEY_NAME || 'crm-api-key-dev'),
 ]);
 
-if (!publicKeyPem || !privateKeyPem || !ssmApiKey) {
-  throw new Error('JWT public, private keys or api key not found');
+if (!publicKeyPem || !privateKeyPem) {
+  throw new Error('JWT public, private keys not found');
 }
 
 const privateKey = await importPKCS8(privateKeyPem, 'RS256');
 export interface TokenRequest {
-  apiKey: string;
   userId: string;
   tenantId: string;
 }
@@ -34,24 +32,10 @@ export const handler = async (event: any): Promise<any> => {
   try {
     // Parse request body
     const body: TokenRequest = JSON.parse(event.body || '{}');
-    const { apiKey, userId, tenantId } = body;
-
-    // Validate required fields
-    if (!apiKey) {
-      throw new BadRequestError('apiKey is required');
-    }
+    const { userId, tenantId } = body;
 
     if (!userId || !tenantId) {
       throw new BadRequestError('userId and tenantId are required');
-    }
-
-    try {
-      const equal = timingSafeEqual(Buffer.from(apiKey), Buffer.from(ssmApiKey));
-      if (!equal) {
-        throw new UnauthorizedError('Invalid API key');
-      }
-    } catch (error) {
-      throw new UnauthorizedError('Invalid API key');
     }
     
     // Token expiration time (1 hour)

@@ -25,4 +25,8 @@ export const config = {
   // Application Configuration
   appName: process.env.APP_NAME || 'crm-neon-v1',
   historyRetentionSeconds: parseInt(process.env.HISTORY_RETENTION_SECONDS || '21600'),
+
+  // Custom Domain Configuration
+  // domainRoot: process.env.CUSTOM_DOMAIN || 'crm.mattcorwin.com',
+  domainRoot: process.env.CUSTOM_DOMAIN,
 };

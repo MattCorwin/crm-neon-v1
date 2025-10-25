@@ -12,14 +12,17 @@ export default $config({
         neon: true,
         aws: {
           region: config.awsRegion as any,
-        }
+        },
       },
     };
   },
   async run() {
     const { config } = await import('./src/common/config.ts');
     const stagePostfix = $app.stage === 'prod' ? '-prod' : '-dev';
-  
+    const domainRoot = config.domainRoot;
+    const customDomain =
+      $app.stage === 'production' ? domainRoot : `${$app.stage}.${domainRoot}`;
+
     const project = new neon.Project(
       'MyAppProject',
       {
@@ -79,11 +82,13 @@ export default $config({
     const migrationConnectionString = $interpolate`postgres://${migrationRole.name}:${migrationRole.password}@${endpoint.host}/${database.name}?sslmode=require`;
     const appConnectionString = $interpolate`postgres://${appRole.name}:${appRole.password}@${endpoint.host}/${database.name}?sslmode=require`;
 
-    const jwksApi = new sst.aws.ApiGatewayV2('JwksApi');
+    const jwksApi = new sst.aws.ApiGatewayV2('JwksApi', {
+      domain: domainRoot ? `jwks.${customDomain}` : undefined,
+    });
 
     // JWKS endpoint for JWT validation
     jwksApi.route('GET /.well-known/jwks.json', {
-      handler: 'src/routes/auth/jwks.handler',
+      handler: 'src/routes/jwks/jwks.handler',
       timeout: '30 seconds',
       memory: '512 MB',
       architecture: 'arm64',
@@ -102,7 +107,7 @@ export default $config({
     });
 
     jwksApi.route('GET /.well-known/openid-configuration', {
-      handler: 'src/routes/auth/openidConfiguration.handler',
+      handler: 'src/routes/jwks/openidConfiguration.handler',
       timeout: '30 seconds',
       memory: '512 MB',
       architecture: 'arm64',
@@ -116,42 +121,42 @@ export default $config({
     if (!process.env.INITIAL_DEPLOY) {
       const publicApi = new sst.aws.ApiGatewayV2(
         'PublicApi',
-        { link: [jwksApi] },
+        {
+          link: [jwksApi],
+          domain: domainRoot ? `api.${customDomain}` : undefined,
+        },
         { dependsOn: [jwksApi] }
       );
 
-      // TODO: ADD API KEY CUSTOM AUTHORIZER
-      publicApi.route('POST /auth/token', {
-        handler: 'src/routes/auth/issueToken.handler',
-        timeout: '30 seconds',
-        memory: '512 MB',
-        architecture: 'arm64',
-        runtime: 'nodejs22.x',
-        environment: {
-          API_KEY_NAME: `${config.apiKeyPrefix}${stagePostfix}`,
-          JWT_ISSUER: jwksApi.url,
-          JWT_AUDIENCE: config.jwtAudience,
-          JWT_PUBLIC_KEY_NAME: `${config.jwtPublicKeyPrefix}${stagePostfix}`,
-          JWT_PRIVATE_KEY_NAME: `${config.jwtPrivateKeyPrefix}${stagePostfix}`,
-        },
-        permissions: [
-          {
-            actions: ['ssm:GetParameter'],
-            resources: [
-              `arn:aws:ssm:${config.awsRegion}:*:parameter/${config.jwtPublicKeyPrefix}${stagePostfix}`,
-              `arn:aws:ssm:${config.awsRegion}:*:parameter/${config.jwtPrivateKeyPrefix}${stagePostfix}`,
-              `arn:aws:ssm:${config.awsRegion}:*:parameter/${config.apiKeyPrefix}${stagePostfix}`,
-            ],
-          },
-        ],
-      });
-
       const authorizer = publicApi.addAuthorizer({
-        name: 'myAuthorizer2',
+        name: 'JwtAuthorizer',
         jwt: {
           issuer: jwksApi.url,
           audiences: [config.jwtAudience],
           identitySource: '$request.header.authorization',
+        },
+      });
+
+      const lambdaAuthorizer = publicApi.addAuthorizer({
+        name: 'LambdaAuthorizer',
+        lambda: {
+          function: {
+            handler: 'src/routes/admin/lambdaAuthorizer.handler',
+            runtime: 'nodejs22.x',
+            architecture: 'arm64',
+            environment: {
+              API_KEY_NAME: `${config.apiKeyPrefix}${stagePostfix}`,
+            },
+            permissions: [
+              {
+                actions: ['ssm:GetParameter'],
+                resources: [
+                  `arn:aws:ssm:${config.awsRegion}:*:parameter/${config.apiKeyPrefix}${stagePostfix}`,
+                ],
+              },
+            ],
+          },
+          identitySources: ['$request.header.x-api-key'],
         },
       });
 
@@ -179,6 +184,39 @@ export default $config({
         }
       ),
         { dependsOn: [jwksApi] });
+
+      publicApi.route(
+        'POST /admin/token',
+        {
+          handler: 'src/routes/admin/issueToken.handler',
+          timeout: '30 seconds',
+          memory: '512 MB',
+          architecture: 'arm64',
+          runtime: 'nodejs22.x',
+          environment: {
+            // API_KEY_NAME: `${config.apiKeyPrefix}${stagePostfix}`,
+            JWT_ISSUER: jwksApi.url,
+            JWT_AUDIENCE: config.jwtAudience,
+            JWT_PUBLIC_KEY_NAME: `${config.jwtPublicKeyPrefix}${stagePostfix}`,
+            JWT_PRIVATE_KEY_NAME: `${config.jwtPrivateKeyPrefix}${stagePostfix}`,
+          },
+          permissions: [
+            {
+              actions: ['ssm:GetParameter'],
+              resources: [
+                `arn:aws:ssm:${config.awsRegion}:*:parameter/${config.jwtPublicKeyPrefix}${stagePostfix}`,
+                `arn:aws:ssm:${config.awsRegion}:*:parameter/${config.jwtPrivateKeyPrefix}${stagePostfix}`,
+                // `arn:aws:ssm:${config.awsRegion}:*:parameter/${config.apiKeyPrefix}${stagePostfix}`,
+              ],
+            },
+          ],
+        },
+        {
+          auth: {
+            lambda: lambdaAuthorizer.id,
+          },
+        }
+      );
     }
 
     new sst.x.DevCommand('RunMigrations', {
