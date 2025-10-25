@@ -1,0 +1,37 @@
+{
+  "name": "crm-neon-v1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "sst dev",
+    "deploy:feat": "sst deploy --stage feat && npm run migrate-pipeline",
+    "deploy:prod": "sst deploy --stage prod && npm run migrate-pipeline",
+    "postinstall": "drizzle-kit migrate",
+    "generate": "drizzle-kit generate",
+    "migrate": "drizzle-kit migrate",
+    "migrate-pipeline": "bash scripts/run-migrations.sh",
+    "init": "INITIAL_DEPLOY=true sst dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ssm": "^3.901.0",
+    "@neondatabase/serverless": "^1.0.2",
+    "@types/pg": "^8.15.5",
+    "aws-lambda": "^1.0.7",
+    "drizzle-kit": "^0.31.5",
+    "drizzle-orm": "^0.44.6",
+    "jose": "^6.1.0",
+    "pg": "^8.16.3",
+    "sst": "^3.17.14",
+    "zod": "^3.24.2"
+  }
+}

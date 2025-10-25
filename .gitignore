@@ -1,0 +1,9 @@
+
+# sst
+.sst
+
+node_modules
+*.pem
+
+.env
+delete.ts
