@@ -12,7 +12,10 @@
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",
     "migrate-pipeline": "bash scripts/run-migrations.sh",
-    "init": "INITIAL_DEPLOY=true sst dev"
+    "init": "INITIAL_DEPLOY=true sst dev",
+    "setup": "tsx scripts/initialSetup.ts",
+    "setup:dev": "tsx scripts/initialSetup.ts --stage dev",
+    "setup:prod": "tsx scripts/initialSetup.ts --stage prod"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +23,7 @@
   "type": "commonjs",
   "devDependencies": {
     "prettier": "^3.6.2",
+    "tsx": "^4.19.2",
     "typescript": "^5.9.3"
   },
   "dependencies": {

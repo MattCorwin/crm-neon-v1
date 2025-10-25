@@ -1,41 +1,33 @@
 /// <reference path="./.sst/platform/config.d.ts" />
 
-const awsRegion = 'us-east-2';
-const jwtPublicKeyPrefix = 'crm-jwt-public-key';
-const jwtPrivateKeyPrefix = 'crm-jwt-private-key';
-const apiKeyPrefix = 'crm-api-key';
-
 export default $config({
-  app(input) {
+  async app(input) {
+    const { config } = await import('./src/common/config.ts');
     return {
-      name: 'crm-neon-v1',
+      name: config.appName,
       removal: input?.stage === 'production' ? 'retain' : 'remove',
       protect: ['production'].includes(input?.stage),
       home: 'aws',
       providers: {
         neon: true,
         aws: {
-          region: awsRegion,
-        },
+          region: config.awsRegion as any,
+        }
       },
     };
   },
   async run() {
-    const neonOrgId = 'org-super-brook-32920885';
+    const { config } = await import('./src/common/config.ts');
     const stagePostfix = $app.stage === 'prod' ? '-prod' : '-dev';
-    // const project = new neon.Project('CrmProject', {
-    //   orgId: neonOrgId,
-    //   historyRetentionSeconds: 21600,
-    //   name: `crm-${$app.stage}`,
-    // });
+  
     const project = new neon.Project(
       'MyAppProject',
       {
-        orgId: neonOrgId,
-        historyRetentionSeconds: 21600,
+        orgId: config.neonOrgId,
+        historyRetentionSeconds: config.historyRetentionSeconds,
       },
       {
-        import: 'quiet-mud-15209532',
+        import: config.neonProjectImport,
       }
     );
 
@@ -57,7 +49,7 @@ export default $config({
       'CrmAppRole',
       {
         branchId: branch.id,
-        name: 'crm-app-user',
+        name: config.appRoleName,
         projectId: project.id,
       },
       { dependsOn: [branch] }
@@ -67,7 +59,7 @@ export default $config({
       'CrmMigrationRole',
       {
         branchId: branch.id,
-        name: 'crm-migration-user',
+        name: config.migrationRoleName,
         projectId: project.id,
       },
       { dependsOn: [branch] }
@@ -77,8 +69,8 @@ export default $config({
       'CrmDatabase',
       {
         branchId: branch.id,
-        name: 'crm',
-        ownerName: migrationRole.name, // Role will be created by Drizzle
+        name: config.databaseName,
+        ownerName: migrationRole.name,
         projectId: project.id,
       },
       { dependsOn: [branch, migrationRole] }
@@ -97,13 +89,13 @@ export default $config({
       architecture: 'arm64',
       runtime: 'nodejs22.x',
       environment: {
-        JWT_PUBLIC_KEY_NAME: `${jwtPublicKeyPrefix}${stagePostfix}`,
+        JWT_PUBLIC_KEY_NAME: `${config.jwtPublicKeyPrefix}${stagePostfix}`,
       },
       permissions: [
         {
           actions: ['ssm:GetParameter'],
           resources: [
-            `arn:aws:ssm:${awsRegion}:*:parameter/${jwtPublicKeyPrefix}${stagePostfix}`,
+            `arn:aws:ssm:${config.awsRegion}:*:parameter/${config.jwtPublicKeyPrefix}${stagePostfix}`,
           ],
         },
       ],
@@ -136,19 +128,19 @@ export default $config({
         architecture: 'arm64',
         runtime: 'nodejs22.x',
         environment: {
-          API_KEY_NAME: `${apiKeyPrefix}${stagePostfix}`,
+          API_KEY_NAME: `${config.apiKeyPrefix}${stagePostfix}`,
           JWT_ISSUER: jwksApi.url,
-          JWT_AUDIENCE: 'crm-neon-api',
-          JWT_PUBLIC_KEY_NAME: `${jwtPublicKeyPrefix}${stagePostfix}`,
-          JWT_PRIVATE_KEY_NAME: `${jwtPrivateKeyPrefix}${stagePostfix}`,
+          JWT_AUDIENCE: config.jwtAudience,
+          JWT_PUBLIC_KEY_NAME: `${config.jwtPublicKeyPrefix}${stagePostfix}`,
+          JWT_PRIVATE_KEY_NAME: `${config.jwtPrivateKeyPrefix}${stagePostfix}`,
         },
         permissions: [
           {
             actions: ['ssm:GetParameter'],
             resources: [
-              `arn:aws:ssm:${awsRegion}:*:parameter/${jwtPublicKeyPrefix}${stagePostfix}`,
-              `arn:aws:ssm:${awsRegion}:*:parameter/${jwtPrivateKeyPrefix}${stagePostfix}`,
-              `arn:aws:ssm:${awsRegion}:*:parameter/${apiKeyPrefix}${stagePostfix}`,
+              `arn:aws:ssm:${config.awsRegion}:*:parameter/${config.jwtPublicKeyPrefix}${stagePostfix}`,
+              `arn:aws:ssm:${config.awsRegion}:*:parameter/${config.jwtPrivateKeyPrefix}${stagePostfix}`,
+              `arn:aws:ssm:${config.awsRegion}:*:parameter/${config.apiKeyPrefix}${stagePostfix}`,
             ],
           },
         ],
@@ -158,7 +150,7 @@ export default $config({
         name: 'myAuthorizer2',
         jwt: {
           issuer: jwksApi.url,
-          audiences: ['crm-neon-api'],
+          audiences: [config.jwtAudience],
           identitySource: '$request.header.authorization',
         },
       });
@@ -174,8 +166,8 @@ export default $config({
           environment: {
             // Use app role for CRUD operations in protected endpoints
             APP_CONNECTION_STRING: appConnectionString,
-            NEON_APP_ROLE_NAME: 'crm-app-user',
-            NEON_MIGRATION_ROLE_NAME: 'crm-migration-user',
+            NEON_APP_ROLE_NAME: config.appRoleName,
+            NEON_MIGRATION_ROLE_NAME: config.migrationRoleName,
           },
         },
         {
@@ -195,18 +187,16 @@ export default $config({
         command: 'npm run migrate',
       },
       environment: {
-        // Use migration role for running migrations
-        // NEON_POOL_CONNECTION_STRING: project.connectionUriPooler,
         MIGRATION_CONNECTION_STRING: migrationConnectionString,
-        NEON_APP_ROLE_NAME: 'crm-app-user',
-        NEON_MIGRATION_ROLE_NAME: 'crm-migration-user',
+        NEON_APP_ROLE_NAME: config.appRoleName,
+        NEON_MIGRATION_ROLE_NAME: config.migrationRoleName,
       },
     });
     return {
       PoolConnectionString: project.connectionUriPooler,
       PublicApiUrl: publicApi?.url,
-      MigrationRoleName: 'crm-migration-user',
-      AppRoleName: 'crm-app-user',
+      MigrationRoleName: config.migrationRoleName,
+      AppRoleName: config.appRoleName,
       BranchUrn: branch.urn,
       EndpointHost: endpoint.host,
       MigrationConnectionString: migrationConnectionString,
@@ -214,9 +204,3 @@ export default $config({
     };
   },
 });
-// TODO: REMOVE MIGRATION USER CONFIG
-// AND USE .EXISTING FOR THE APP ROLE
-// PASS THE APP USER NAME AND PW TO THE DB CONTROLLER
-// EITHER DIRECTLY OR BY CREATING A SECRET
-
-// RECREATE CUSTOM MIGRATION TO GIVE APP USER CRUD ACCESS TO ALL TABLES
