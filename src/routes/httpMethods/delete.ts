@@ -4,7 +4,7 @@ import {
   EntityNotFoundError,
   RecordNotFoundError,
 } from "../../db/controller";
-import { createResponse } from "../crm/utils";
+import { createResponse } from "../../common/utils/response";
 import { ApiResponse } from "../crm/types";
 import { NotFoundError, BadRequestError, InternalServerError } from "../../common/utils/errors";
 
@@ -12,7 +12,7 @@ async function deleteItem(entity: string, id: number, tenantId: number): Promise
   try {
     const result = await deleteRecord(entity, id, tenantId);
     const config = dbConfig[entity];
-    return createResponse(200, result, `${config.name} deleted successfully`);
+    return createResponse(200, result);
   } catch (error: any) {
     console.error(`Error deleting ${entity}:`, error);
     

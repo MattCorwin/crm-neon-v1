@@ -5,7 +5,7 @@ import {
   EntityNotFoundError,
   RecordNotFoundError,
 } from "../../db/controller";
-import { createResponse } from "../crm/utils";
+import { createResponse } from "../../common/utils/response";
 import { ApiResponse } from "../crm/types";
 import { NotFoundError, BadRequestError, InternalServerError } from "../../common/utils/errors";
 
@@ -13,7 +13,7 @@ async function handleUpdate(entity: string, id: number, data: any, tenantId: num
   try {
     const record = await updateRecord(entity, id, data, tenantId);
     const config = dbConfig[entity];
-    return createResponse(200, record, `${config.name} updated successfully`);
+    return createResponse(200, record);
   } catch (error: any) {
     console.error(`Error updating ${entity}:`, error);
     

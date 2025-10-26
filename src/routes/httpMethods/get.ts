@@ -6,7 +6,7 @@ import {
   EntityNotFoundError,
   RecordNotFoundError,
 } from "../../db/controller";
-import { createResponse } from "../crm/utils";
+import { createResponse } from "../../common/utils/response";
 import { ApiResponse } from "../crm/types";
 import { NotFoundError, BadRequestError, InternalServerError } from "../../common/utils/errors";
 
@@ -14,7 +14,7 @@ async function handleList(entity: string, tenantId: number, queryParams?: Record
   try {
     const records = await listRecords(entity, tenantId);
     const config = dbConfig[entity];
-    return createResponse(200, records, 'retrieved successfully');
+    return createResponse(200, records);
   } catch (error: any) {
     console.error(`Error listing ${entity}:`, error);
     
@@ -30,7 +30,7 @@ async function handleGetById(entity: string, id: number, tenantId: number): Prom
   try {
     const record = await getRecordById(entity, id, tenantId);
     const config = dbConfig[entity];
-    return createResponse(200, record, `${config.name} retrieved successfully`);
+    return createResponse(200, record);
   } catch (error: any) {
     console.error(`Error getting ${entity} by id:`, error);
     

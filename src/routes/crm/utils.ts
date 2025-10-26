@@ -1,21 +1,4 @@
-import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
-
-export function createResponse(statusCode: number, data: any, message?: string): APIGatewayProxyResultV2 {
-  return {
-    statusCode,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-    body: JSON.stringify({
-      success: statusCode >= 200 && statusCode < 300,
-      message,
-      data,
-    }),
-  };
-}
+import { APIGatewayProxyEventV2 } from 'aws-lambda';
 
 export function getTenantId(event: APIGatewayProxyEventV2): number | null {
   const tenantId = event.requestContext?.authorizer?.jwt?.claims?.tenantId;

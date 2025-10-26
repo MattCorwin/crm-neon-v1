@@ -4,7 +4,7 @@ import {
   createRecord,
   EntityNotFoundError,
 } from "../../db/controller";
-import { createResponse } from "../crm/utils";
+import { createResponse } from "../../common/utils/response";
 import { ApiResponse } from "../crm/types";
 import { NotFoundError, BadRequestError, InternalServerError } from "../../common/utils/errors";
 
@@ -12,7 +12,7 @@ async function handleCreate(entity: string, data: any, tenantId: number): Promis
   try {
     const record = await createRecord(entity, data, tenantId);
     const config = dbConfig[entity];
-    return createResponse(201, record, `${config.name} created successfully`);
+    return createResponse(201, record);
   } catch (error: any) {
     console.error(`Error creating ${entity}:`, error);
     
