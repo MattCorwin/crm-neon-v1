@@ -7,10 +7,10 @@ import {
   MethodNotAllowedError,
   NotFoundError,
 } from '../../common/utils/errors';
-import { handleOptions } from '../handlerFunctions/options';
+import { handleOptions } from '../httpMethods/options';
 import { parseBody } from '../crm/utils';
-import { handlePost } from '../handlerFunctions';
-import { handleDelete } from '../handlerFunctions';
+import { handlePost } from '../httpMethods';
+import { handleDelete } from '../httpMethods';
 
 export const handler = async (
   event: APIGatewayProxyEventV2

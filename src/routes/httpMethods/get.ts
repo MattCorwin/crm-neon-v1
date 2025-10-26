@@ -6,22 +6,23 @@ import {
   EntityNotFoundError,
   RecordNotFoundError,
 } from "../../db/controller";
-import { createResponse, createErrorResponse } from "../crm/utils";
+import { createResponse } from "../crm/utils";
 import { ApiResponse } from "../crm/types";
+import { NotFoundError, BadRequestError, InternalServerError } from "../../common/utils/errors";
 
 async function handleList(entity: string, tenantId: number, queryParams?: Record<string, string>): Promise<ApiResponse> {
   try {
     const records = await listRecords(entity, tenantId);
     const config = dbConfig[entity];
-    return createResponse(200, records, `${config.pluralName} retrieved successfully`);
+    return createResponse(200, records, 'retrieved successfully');
   } catch (error: any) {
     console.error(`Error listing ${entity}:`, error);
     
     if (error instanceof EntityNotFoundError) {
-      return createErrorResponse(404, 'Entity not found', { entity });
+      throw new NotFoundError('Entity not found');
     }
     
-    return createErrorResponse(500, 'Failed to retrieve records', { message: error.message });
+    throw new InternalServerError(`Failed to retrieve records: ${error.message}`);
   }
 }
 
@@ -34,14 +35,14 @@ async function handleGetById(entity: string, id: number, tenantId: number): Prom
     console.error(`Error getting ${entity} by id:`, error);
     
     if (error instanceof EntityNotFoundError) {
-      return createErrorResponse(404, 'Entity not found', { entity });
+      throw new NotFoundError('Entity not found');
     }
     
     if (error instanceof RecordNotFoundError) {
-      return createErrorResponse(404, `${entity} not found`, { id });
+      throw new NotFoundError(`${entity} not found`);
     }
     
-    return createErrorResponse(500, 'Failed to retrieve record', { message: error.message });
+    throw new InternalServerError(`Failed to retrieve record: ${error.message}`);
   }
 }
 
@@ -54,7 +55,7 @@ export async function handleGet(
   if (idParam) {
     const id = parseInt(idParam, 10);
     if (isNaN(id)) {
-      return createErrorResponse(400, 'Invalid ID parameter');
+      throw new BadRequestError('Invalid ID parameter');
     }
     return await handleGetById(entity, id, tenantId);
   }

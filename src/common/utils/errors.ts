@@ -19,6 +19,7 @@ export class ErrorResponse extends Error {
       body: this.body,
       headers: {
         'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
       },
     };
   }

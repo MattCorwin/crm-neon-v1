@@ -4,8 +4,9 @@ import {
   createRecord,
   EntityNotFoundError,
 } from "../../db/controller";
-import { createResponse, createErrorResponse } from "../crm/utils";
+import { createResponse } from "../crm/utils";
 import { ApiResponse } from "../crm/types";
+import { NotFoundError, BadRequestError, InternalServerError } from "../../common/utils/errors";
 
 async function handleCreate(entity: string, data: any, tenantId: number): Promise<ApiResponse> {
   try {
@@ -16,14 +17,14 @@ async function handleCreate(entity: string, data: any, tenantId: number): Promis
     console.error(`Error creating ${entity}:`, error);
     
     if (error instanceof EntityNotFoundError) {
-      return createErrorResponse(404, 'Entity not found', { entity });
+      throw new NotFoundError('Entity not found');
     }
     
     if (error instanceof z.ZodError) {
-      return createErrorResponse(400, 'Validation error', { errors: error.errors });
+      throw new BadRequestError('Validation error');
     }
     
-    return createErrorResponse(500, 'Failed to create record', { message: error.message });
+    throw new InternalServerError(`Failed to create record: ${error.message}`);
   }
 }
 
@@ -33,7 +34,7 @@ export async function handlePost(
   tenantId: number
 ): Promise<ApiResponse> {
   if (!body) {
-    return createErrorResponse(400, 'Request body is required');
+    throw new BadRequestError('Request body is required');
   }
   return await handleCreate(entity, body, tenantId);
 }

@@ -4,8 +4,9 @@ import {
   EntityNotFoundError,
   RecordNotFoundError,
 } from "../../db/controller";
-import { createResponse, createErrorResponse } from "../crm/utils";
+import { createResponse } from "../crm/utils";
 import { ApiResponse } from "../crm/types";
+import { NotFoundError, BadRequestError, InternalServerError } from "../../common/utils/errors";
 
 async function deleteItem(entity: string, id: number, tenantId: number): Promise<ApiResponse> {
   try {
@@ -16,14 +17,14 @@ async function deleteItem(entity: string, id: number, tenantId: number): Promise
     console.error(`Error deleting ${entity}:`, error);
     
     if (error instanceof EntityNotFoundError) {
-      return createErrorResponse(404, 'Entity not found', { entity });
+      throw new NotFoundError('Entity not found');
     }
     
     if (error instanceof RecordNotFoundError) {
-      return createErrorResponse(404, `${entity} not found or unauthorized`, { id });
+      throw new NotFoundError(`${entity} not found or unauthorized`);
     }
     
-    return createErrorResponse(500, 'Failed to delete record', { message: error.message });
+    throw new InternalServerError(`Failed to delete record: ${error.message}`);
   }
 }
 
@@ -33,12 +34,12 @@ export async function handleDelete(
   tenantId: number
 ): Promise<ApiResponse> {
   if (!idParam) {
-    return createErrorResponse(400, 'ID parameter is required for delete');
+    throw new BadRequestError('ID parameter is required for delete');
   }
   
   const id = parseInt(idParam, 10);
   if (isNaN(id)) {
-    return createErrorResponse(400, 'Invalid ID parameter');
+    throw new BadRequestError('Invalid ID parameter');
   }
   
   return deleteItem(entity, id, tenantId);

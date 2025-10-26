@@ -66,7 +66,6 @@ export interface DbEntityConfig {
   updateSchema: z.ZodSchema;
   selectSchema: z.ZodSchema;
   name: string;
-  pluralName: string;
   isAdminOnly: boolean;
 }
 
@@ -77,7 +76,6 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     updateSchema: tenantInsertSchema.partial(),
     selectSchema: tenantSelectSchema,
     name: 'tenant',
-    pluralName: 'tenants',
     isAdminOnly: true,
   },
   users: {
@@ -86,7 +84,6 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     updateSchema: userInsertSchema.partial(),
     selectSchema: userSelectSchema,
     name: 'user',
-    pluralName: 'users',
     isAdminOnly: true,
   },
   accounts: {
@@ -95,7 +92,6 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     updateSchema: accountInsertSchema.partial(),
     selectSchema: accountSelectSchema,
     name: 'account',
-    pluralName: 'accounts',
     isAdminOnly: false,
   },
   contacts: {
@@ -104,7 +100,6 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     updateSchema: contactInsertSchema.partial(),
     selectSchema: contactSelectSchema,
     name: 'contact',
-    pluralName: 'contacts',
     isAdminOnly: false,
   },
   leads: {
@@ -113,7 +108,6 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     updateSchema: leadInsertSchema.partial(),
     selectSchema: leadSelectSchema,
     name: 'lead',
-    pluralName: 'leads',
     isAdminOnly: false,
   },
   opportunities: {
@@ -122,7 +116,6 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     updateSchema: opportunityInsertSchema.partial(),
     selectSchema: opportunitySelectSchema,
     name: 'opportunity',
-    pluralName: 'opportunities',
     isAdminOnly: false,
   },
   projects: {
@@ -131,7 +124,6 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     updateSchema: projectInsertSchema.partial(),
     selectSchema: projectSelectSchema,
     name: 'project',
-    pluralName: 'projects',
     isAdminOnly: false,
   },
   estimates: {
@@ -140,7 +132,6 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     updateSchema: estimateInsertSchema.partial(),
     selectSchema: estimateSelectSchema,
     name: 'estimate',
-    pluralName: 'estimates',
     isAdminOnly: false,
   },
   jobs: {
@@ -149,7 +140,6 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     updateSchema: jobInsertSchema.partial(),
     selectSchema: jobSelectSchema,
     name: 'job',
-    pluralName: 'jobs',
     isAdminOnly: false,
   },
   invoices: {
@@ -158,7 +148,6 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     updateSchema: invoiceInsertSchema.partial(),
     selectSchema: invoiceSelectSchema,
     name: 'invoice',
-    pluralName: 'invoices',
     isAdminOnly: false,
   },
   tasks: {
@@ -167,7 +156,6 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     updateSchema: taskInsertSchema.partial(),
     selectSchema: taskSelectSchema,
     name: 'task',
-    pluralName: 'tasks',
     isAdminOnly: false,
   },
   activities: {
@@ -176,7 +164,6 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     updateSchema: activityInsertSchema.partial(),
     selectSchema: activitySelectSchema,
     name: 'activity',
-    pluralName: 'activities',
     isAdminOnly: false,
   },
 };

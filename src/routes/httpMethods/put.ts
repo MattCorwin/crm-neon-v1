@@ -5,8 +5,9 @@ import {
   EntityNotFoundError,
   RecordNotFoundError,
 } from "../../db/controller";
-import { createResponse, createErrorResponse } from "../crm/utils";
+import { createResponse } from "../crm/utils";
 import { ApiResponse } from "../crm/types";
+import { NotFoundError, BadRequestError, InternalServerError } from "../../common/utils/errors";
 
 async function handleUpdate(entity: string, id: number, data: any, tenantId: number): Promise<ApiResponse> {
   try {
@@ -17,18 +18,18 @@ async function handleUpdate(entity: string, id: number, data: any, tenantId: num
     console.error(`Error updating ${entity}:`, error);
     
     if (error instanceof EntityNotFoundError) {
-      return createErrorResponse(404, 'Entity not found', { entity });
+      throw new NotFoundError('Entity not found');
     }
     
     if (error instanceof RecordNotFoundError) {
-      return createErrorResponse(404, `${entity} not found or unauthorized`, { id });
+      throw new NotFoundError(`${entity} not found or unauthorized`);
     }
     
     if (error instanceof z.ZodError) {
-      return createErrorResponse(400, 'Validation error', { errors: error.errors });
+      throw new BadRequestError('Validation error');
     }
     
-    return createErrorResponse(500, 'Failed to update record', { message: error.message });
+    throw new InternalServerError(`Failed to update record: ${error.message}`);
   }
 }
 
@@ -39,15 +40,15 @@ export async function handlePut(
   tenantId: number
 ): Promise<ApiResponse> {
   if (!idParam) {
-    return createErrorResponse(400, 'ID parameter is required for update');
+    throw new BadRequestError('ID parameter is required for update');
   }
   if (!body) {
-    return createErrorResponse(400, 'Request body is required');
+    throw new BadRequestError('Request body is required');
   }
   
   const id = parseInt(idParam, 10);
   if (isNaN(id)) {
-    return createErrorResponse(400, 'Invalid ID parameter');
+    throw new BadRequestError('Invalid ID parameter');
   }
   
   return await handleUpdate(entity, id, body, tenantId);

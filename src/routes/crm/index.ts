@@ -6,7 +6,7 @@ import {
   handlePut,
   handleDelete,
   handleOptions,
-} from '../handlerFunctions';
+} from '../httpMethods';
 import { isAdminOnlyRoute } from '../../db/config';
 import {
   ErrorResponse,
