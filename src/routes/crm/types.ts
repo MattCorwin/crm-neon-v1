@@ -5,6 +5,9 @@ export interface ApiGatewayEvent {
   body?: string;
   queryStringParameters?: Record<string, string>;
   requestContext?: {
+    http: {
+      method: string;
+    };
     authorizer?: {
       jwt?: {
         claims?: {

@@ -217,6 +217,26 @@ export default $config({
           },
         }
       );
+
+      publicApi.route(
+        'POST /admin/{entity}',
+        {
+          handler: 'src/routes/admin/index.handler',
+          timeout: '30 seconds',
+          memory: '512 MB',
+          architecture: 'arm64',
+          runtime: 'nodejs22.x',
+          environment: {
+            APP_CONNECTION_STRING: appConnectionString,
+            NEON_APP_ROLE_NAME: config.appRoleName,
+          },
+        },
+        {
+          auth: {
+            lambda: lambdaAuthorizer.id,
+          },
+        }
+      );
     }
 
     new sst.x.DevCommand('RunMigrations', {

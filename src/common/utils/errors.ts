@@ -48,6 +48,12 @@ export class NotFoundError extends ErrorResponse {
   }
 }
 
+export class MethodNotAllowedError extends ErrorResponse {
+  constructor(message: string = 'Method Not Allowed') {
+    super(405, message);
+  }
+}
+
 export class ConflictError extends ErrorResponse {
   constructor(message: string = 'Conflict') {
     super(409, message);

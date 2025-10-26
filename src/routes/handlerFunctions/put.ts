@@ -5,8 +5,8 @@ import {
   EntityNotFoundError,
   RecordNotFoundError,
 } from "../../db/controller";
-import { createResponse, createErrorResponse } from "./utils";
-import { ApiResponse } from "./types";
+import { createResponse, createErrorResponse } from "../crm/utils";
+import { ApiResponse } from "../crm/types";
 
 async function handleUpdate(entity: string, id: number, data: any, tenantId: number): Promise<ApiResponse> {
   try {

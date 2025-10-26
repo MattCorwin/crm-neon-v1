@@ -67,6 +67,7 @@ export interface DbEntityConfig {
   selectSchema: z.ZodSchema;
   name: string;
   pluralName: string;
+  isAdminOnly: boolean;
 }
 
 export const dbConfig: Record<string, DbEntityConfig> = {
@@ -77,6 +78,7 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     selectSchema: tenantSelectSchema,
     name: 'tenant',
     pluralName: 'tenants',
+    isAdminOnly: true,
   },
   users: {
     table: usersTable,
@@ -85,6 +87,7 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     selectSchema: userSelectSchema,
     name: 'user',
     pluralName: 'users',
+    isAdminOnly: true,
   },
   accounts: {
     table: accountsTable,
@@ -93,6 +96,7 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     selectSchema: accountSelectSchema,
     name: 'account',
     pluralName: 'accounts',
+    isAdminOnly: false,
   },
   contacts: {
     table: contactsTable,
@@ -101,6 +105,7 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     selectSchema: contactSelectSchema,
     name: 'contact',
     pluralName: 'contacts',
+    isAdminOnly: false,
   },
   leads: {
     table: leadsTable,
@@ -109,6 +114,7 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     selectSchema: leadSelectSchema,
     name: 'lead',
     pluralName: 'leads',
+    isAdminOnly: false,
   },
   opportunities: {
     table: opportunitiesTable,
@@ -117,6 +123,7 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     selectSchema: opportunitySelectSchema,
     name: 'opportunity',
     pluralName: 'opportunities',
+    isAdminOnly: false,
   },
   projects: {
     table: projectsTable,
@@ -125,6 +132,7 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     selectSchema: projectSelectSchema,
     name: 'project',
     pluralName: 'projects',
+    isAdminOnly: false,
   },
   estimates: {
     table: estimatesTable,
@@ -133,6 +141,7 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     selectSchema: estimateSelectSchema,
     name: 'estimate',
     pluralName: 'estimates',
+    isAdminOnly: false,
   },
   jobs: {
     table: jobsTable,
@@ -141,6 +150,7 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     selectSchema: jobSelectSchema,
     name: 'job',
     pluralName: 'jobs',
+    isAdminOnly: false,
   },
   invoices: {
     table: invoicesTable,
@@ -149,6 +159,7 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     selectSchema: invoiceSelectSchema,
     name: 'invoice',
     pluralName: 'invoices',
+    isAdminOnly: false,
   },
   tasks: {
     table: tasksTable,
@@ -157,6 +168,7 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     selectSchema: taskSelectSchema,
     name: 'task',
     pluralName: 'tasks',
+    isAdminOnly: false,
   },
   activities: {
     table: activitiesTable,
@@ -165,16 +177,20 @@ export const dbConfig: Record<string, DbEntityConfig> = {
     selectSchema: activitySelectSchema,
     name: 'activity',
     pluralName: 'activities',
+    isAdminOnly: false,
   },
 };
 
-// Helper function to validate entity exists
-export function getEntityConfig(entityName: string): DbEntityConfig | null {
+export const getEntityConfig = (entityName: string): DbEntityConfig | null => {
   return dbConfig[entityName] || null;
 }
 
-// Helper function to get all valid entity names
-export function getValidEntityNames(): string[] {
+export const getValidEntityNames = (): string[] => {
   return Object.keys(dbConfig);
+}
+
+export const isAdminOnlyRoute = (entityName: string): boolean => {
+  const config = getEntityConfig(entityName);
+  return config?.isAdminOnly || false;
 }
 

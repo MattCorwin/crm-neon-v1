@@ -4,10 +4,10 @@ import {
   EntityNotFoundError,
   RecordNotFoundError,
 } from "../../db/controller";
-import { createResponse, createErrorResponse } from "./utils";
-import { ApiResponse } from "./types";
+import { createResponse, createErrorResponse } from "../crm/utils";
+import { ApiResponse } from "../crm/types";
 
-async function handleDelete(entity: string, id: number, tenantId: number): Promise<ApiResponse> {
+async function deleteItem(entity: string, id: number, tenantId: number): Promise<ApiResponse> {
   try {
     const result = await deleteRecord(entity, id, tenantId);
     const config = dbConfig[entity];
@@ -27,7 +27,7 @@ async function handleDelete(entity: string, id: number, tenantId: number): Promi
   }
 }
 
-export async function handleDeleteRequest(
+export async function handleDelete(
   entity: string,
   idParam: string,
   tenantId: number
@@ -41,5 +41,5 @@ export async function handleDeleteRequest(
     return createErrorResponse(400, 'Invalid ID parameter');
   }
   
-  return await handleDelete(entity, id, tenantId);
+  return deleteItem(entity, id, tenantId);
 }
