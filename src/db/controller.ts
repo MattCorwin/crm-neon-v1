@@ -1,7 +1,8 @@
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { getEntityConfig } from "./config";
+import { NotFoundError } from "../common/utils/errors";
 
 // Create connection for app role (CRUD operations)
 const createAppConnection = () => {
@@ -18,17 +19,15 @@ async function setTenantContext(tenantId: number) {
   await appSql.unsafe(`SET LOCAL app.current_tenant_id = ${Number(tenantId)}`);
 }
 
-export class EntityNotFoundError extends Error {
+export class EntityNotFoundError extends NotFoundError {
   constructor(public entityName: string) {
     super(`Entity '${entityName}' not found`);
-    this.name = 'EntityNotFoundError';
   }
 }
 
-export class RecordNotFoundError extends Error {
+export class RecordNotFoundError extends NotFoundError {
   constructor(public entityName: string, public id: number) {
     super(`${entityName} with id ${id} not found`);
-    this.name = 'RecordNotFoundError';
   }
 }
 

@@ -194,7 +194,8 @@ export default $config({
           architecture: 'arm64',
           runtime: 'nodejs22.x',
           environment: {
-            // API_KEY_NAME: `${config.apiKeyPrefix}${stagePostfix}`,
+            APP_CONNECTION_STRING: appConnectionString,
+            NEON_APP_ROLE_NAME: config.appRoleName,
             JWT_ISSUER: jwksApi.url,
             JWT_AUDIENCE: config.jwtAudience,
             JWT_PUBLIC_KEY_NAME: `${config.jwtPublicKeyPrefix}${stagePostfix}`,

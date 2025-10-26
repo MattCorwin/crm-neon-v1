@@ -1,7 +1,7 @@
-import { SignJWT, exportJWK, importPKCS8, importSPKI } from 'jose';
+import { SignJWT, importPKCS8 } from 'jose';
 import { getSecret } from '../../common/utils/getSecret';
-import { timingSafeEqual } from 'crypto';
-import { ErrorResponse, BadRequestError, UnauthorizedError, InternalServerError } from '../../common/utils/errors';
+import { ErrorResponse, BadRequestError, InternalServerError } from '../../common/utils/errors';
+import { getRecordById } from '../../db/controller';
 
 const [publicKeyPem, privateKeyPem] = await Promise.all([
   getSecret(process.env.JWT_PUBLIC_KEY_NAME || 'crm-jwt-public-key-dev'),
@@ -37,7 +37,13 @@ export const handler = async (event: any): Promise<any> => {
     if (!userId || !tenantId) {
       throw new BadRequestError('userId and tenantId are required');
     }
-    
+
+    const user = await getRecordById('users', parseInt(userId), parseInt(tenantId));
+    if (!user) {
+      throw new BadRequestError('User not found');
+    }
+    console.log('user', user);
+
     // Token expiration time (1 hour)
     const expiresIn = 3600; // seconds
     const now = Math.floor(Date.now() / 1000);
@@ -68,6 +74,7 @@ export const handler = async (event: any): Promise<any> => {
   } catch (error) {
     console.error('Error issuing token:', error);
     if (error instanceof ErrorResponse) {
+      console.log('returning error response');
       return error.toResponse();
     }
     const errorResponse = new InternalServerError();
