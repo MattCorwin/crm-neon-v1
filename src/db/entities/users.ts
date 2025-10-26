@@ -1,10 +1,11 @@
-import { integer, pgTable, pgPolicy, serial, text, timestamp } from 'drizzle-orm/pg-core';
+import { integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { tenantsTable } from './tenants';
-import { appRole, migrationRole } from './roles';
-import { hasTenantAccess, isMigrationRole } from '../rls-helpers';
+import { applyRlsPolicies } from '../rls-helpers';
 
-export const usersTable = pgTable('users', {
+const tableName = 'users';
+
+export const usersTable = pgTable(tableName, {
   id: serial('id').primaryKey(),
   tenantId: integer('tenant_id').notNull().references(() => tenantsTable.id),
   name: text('name').notNull(),
@@ -13,22 +14,7 @@ export const usersTable = pgTable('users', {
   age: integer('age'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
-}, (table) => [
-  // App role policy - restrictive tenant access
-  pgPolicy('users_app_policy', {
-    for: 'all',
-    as: 'restrictive',
-    to: appRole,
-    using: hasTenantAccess(table.tenantId),
-  }),
-  // Migration role policy - bypass RLS
-  pgPolicy('users_migration_policy', {
-    for: 'all',
-    as: 'restrictive',
-    to: migrationRole,
-    using: isMigrationRole(),
-  }),
-]);
+}, applyRlsPolicies(tableName));
 
 const timestampSchema = z.string().datetime().or(z.date()).optional();
 

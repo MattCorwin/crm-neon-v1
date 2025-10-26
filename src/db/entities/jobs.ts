@@ -1,12 +1,13 @@
-import { integer, pgTable, pgPolicy, serial, text, timestamp } from 'drizzle-orm/pg-core';
+import { integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { tenantsTable } from './tenants';
 import { projectsTable } from './projects';
 import { usersTable } from './users';
-import { appRole, migrationRole } from './roles';
-import { hasTenantAccess, isMigrationRole } from '../rls-helpers';
+import { applyRlsPolicies } from '../rls-helpers';
 
-export const jobsTable = pgTable('jobs', {
+const tableName = 'jobs';
+
+export const jobsTable = pgTable(tableName, {
   id: serial('id').primaryKey(),
   tenantId: integer('tenant_id').notNull().references(() => tenantsTable.id),
   projectId: integer('project_id').notNull().references(() => projectsTable.id),
@@ -18,22 +19,7 @@ export const jobsTable = pgTable('jobs', {
   assignedTo: integer('assigned_to').references(() => usersTable.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-}, (table) => [
-  // App role policy - restrictive tenant access
-  pgPolicy('jobs_app_policy', {
-    for: 'all',
-    as: 'restrictive',
-    to: appRole,
-    using: hasTenantAccess(table.tenantId),
-  }),
-  // Migration role policy - bypass RLS
-  pgPolicy('jobs_migration_policy', {
-    for: 'all',
-    as: 'restrictive',
-    to: migrationRole,
-    using: isMigrationRole(),
-  }),
-]);
+}, applyRlsPolicies(tableName));
 
 const timestampSchema = z.string().datetime().or(z.date()).optional();
 
