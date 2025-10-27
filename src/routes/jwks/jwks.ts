@@ -30,7 +30,7 @@ const initKeys = async () => {
     ],
   };
 };
-export const handler = async (event: any): Promise<any> => {
+export const handler = async (_event: any): Promise<any> => {
   try {
     // Initialize keys if not already done
     await initKeys();
